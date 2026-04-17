@@ -32,7 +32,6 @@ const weatherCacheSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// We index by locationKey to find it quickly
-weatherCacheSchema.index({ locationKey: 1 });
+// The locationKey is already indexed via the 'unique: true' property in the schema definition.
 
 export default mongoose.model("WeatherCache", weatherCacheSchema);
