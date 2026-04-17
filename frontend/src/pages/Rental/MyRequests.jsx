@@ -15,18 +15,18 @@ export default function MyRequests() {
     // Socket Listeners for Real-time Unread Count
     const socket = getSocket();
     if (socket) {
-      socket.on("incomingMessage", (msg) => {
+      const handleIncoming = (msg) => {
+        const requestId = msg.rentalRequestId || msg.rentalRequest;
         setRequests(prevRequests => prevRequests.map(req => {
-          if (req._id === msg.rentalRequest) {
+          if (req._id === requestId) {
             return { ...req, unreadCount: (req.unreadCount || 0) + 1 };
           }
           return req;
         }));
-      });
+      };
 
-      return () => {
-        socket.off("incomingMessage");
-      }
+      socket.on("incomingMessage", handleIncoming);
+      return () => socket.off("incomingMessage", handleIncoming);
     }
   }, []);
 

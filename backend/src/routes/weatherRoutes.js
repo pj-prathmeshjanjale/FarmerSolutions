@@ -1,13 +1,16 @@
 import express from "express";
 import { protect } from "../middleware/authMiddleware.js";
-import { getCurrentWeather } from "../controllers/weatherController.js";
+import { getWeatherDashboard } from "../controllers/weatherController.js";
 
 const router = express.Router();
 
-// Get current weather (city or land fallback)
+// Get weather dashboard data (Supports optional auth token for user profile context)
 router.post(
-  "/current",
-  getCurrentWeather
+  "/dashboard",
+  getWeatherDashboard
 );
-
+router.get(
+  "/dashboard",
+  getWeatherDashboard
+);
 export default router;

@@ -60,12 +60,13 @@ export const sendChatMessage = async (req, res) => {
     chatMessage = await chatMessage.populate("sender", "_id name");
 
     // Real-time emit to room
-    global.io?.to(rentalRequestId).emit("newMessage", chatMessage);
+    global.io?.to(String(rentalRequestId)).emit("newMessage", chatMessage);
 
     // Notification emit to receiver personal room
     global.io?.to(`user_${receiver}`).emit("incomingMessage", {
       ...chatMessage.toObject(),
-      rentalRequestId: rentalRequestId
+      rentalRequestId: String(rentalRequestId),
+      rentalRequest: String(rentalRequestId) // For compatibility with different frontend listeners
     });
 
     res.status(201).json({

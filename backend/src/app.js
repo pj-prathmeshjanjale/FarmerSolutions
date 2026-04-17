@@ -30,6 +30,7 @@ import recommendationRoutes from "./routes/recommendationRoutes.js";
 import chatbotRoutes from "./routes/chatbotRoutes.js";
 import weatherRoutes from "./routes/weatherRoutes.js";
 import mandiPriceRoutes from "./routes/mandiPriceRoutes.js";
+import communityPriceRoutes from "./routes/communityPriceRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
 import rentalRequestRoutes from "./routes/rentalRequestRoutes.js";
 import equipmentRoutes from "./routes/equipmentRoutes.js";
@@ -44,7 +45,7 @@ app.use("/api/rental-requests", rentalRequestRoutes);
 app.use("/api/chat", chatRoutes);
 
 app.use("/api/mandi-prices", mandiPriceRoutes);
-
+app.use("/api/community-price", communityPriceRoutes);
 app.use("/api/weather", weatherRoutes);
 
 app.use("/api/chatbot", chatbotRoutes);

@@ -32,9 +32,24 @@ const equipmentSchema = new mongoose.Schema(
       }
     ],
 
-    pricePerDay: {
+    pricePerDay: { // Legacy field, keeping for compatibility
+      type: Number
+    },
+
+    price: {
       type: Number,
       required: true
+    },
+
+    priceUnit: {
+      type: String,
+      enum: ["hour", "day", "acre"],
+      default: "day"
+    },
+
+    priceNote: {
+      type: String,
+      trim: true
     },
 
     minimumRentalDays: {

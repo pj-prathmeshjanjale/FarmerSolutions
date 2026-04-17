@@ -1,54 +1,89 @@
-import MandiPrice from "../models/MandiPrice.js";
+import * as mandiService from "../services/mandiService.js";
+import { generateSellRecommendation } from "../services/mandiAiService.js";
+import {
+  mandiQuerySchema,
+  mandiTrendsQuerySchema,
+  mandiBestQuerySchema,
+  mandiCompareSchema
+} from "../validations/mandiValidation.js";
 
-export const getMandiPrices = async (req, res) => {
+export const getMandiPrices = async (req, res, next) => {
   try {
-    const { crop, market } = req.query;
-
-    // 1️⃣ Validate input
-    if (!crop || !market) {
-      return res.status(400).json({
-        success: false,
-        message: "crop and market query parameters are required"
-      });
-    }
-
-    // 2️⃣ Normalize inputs
-    const normalizedCrop = crop.toLowerCase().trim();
-    const normalizedMarket = market.toLowerCase().trim();
-
-    // 3️⃣ Fetch cached mandi price
-    const mandiPrice = await MandiPrice.findOne({
-      crop: normalizedCrop,
-      market: normalizedMarket
-    }).sort({ date: -1 });
-
-    if (!mandiPrice) {
-      return res.status(404).json({
-        success: false,
-        message: "Mandi price data not available"
-      });
-    }
-
-    // 4️⃣ Send response
-    res.status(200).json({
-      success: true,
-      crop: mandiPrice.crop,
-      market: mandiPrice.market,
-      prices: {
-        min: mandiPrice.minPrice,
-        max: mandiPrice.maxPrice,
-        modal: mandiPrice.modalPrice
-      },
-      unit: mandiPrice.unit,
-      source: mandiPrice.source,
-      lastUpdated: mandiPrice.date
-    });
-
+    const params = mandiQuerySchema.parse(req.query);
+    const result = await mandiService.getPrices(params);
+    res.status(200).json(result);
   } catch (error) {
-    console.error("Mandi Price Error:", error.message);
-    res.status(500).json({
-      success: false,
-      message: "Unable to fetch mandi prices"
-    });
+    if (error.name === "ZodError") {
+      return res.status(400).json({ success: false, errors: error.errors });
+    }
+    next(error);
+  }
+};
+
+export const getMandiTrends = async (req, res, next) => {
+  try {
+    const params = mandiTrendsQuerySchema.parse(req.query);
+    const result = await mandiService.getTrends(params);
+    res.status(200).json(result);
+  } catch (error) {
+    if (error.name === "ZodError") {
+      return res.status(400).json({ success: false, errors: error.errors });
+    }
+    next(error);
+  }
+};
+
+export const getBestMandi = async (req, res, next) => {
+  try {
+    const params = mandiBestQuerySchema.parse(req.query);
+    const result = await mandiService.getBestMandi(params);
+    if (!result.success) {
+      return res.status(404).json(result);
+    }
+    res.status(200).json(result);
+  } catch (error) {
+    if (error.name === "ZodError") {
+      return res.status(400).json({ success: false, errors: error.errors });
+    }
+    next(error);
+  }
+};
+
+export const compareMandis = async (req, res, next) => {
+  try {
+    // Validate request body
+    const params = mandiCompareSchema.parse(req.body);
+    const result = await mandiService.compareMandis(params);
+    res.status(200).json(result);
+  } catch (error) {
+    if (error.name === "ZodError") {
+      return res.status(400).json({ success: false, errors: error.errors });
+    }
+    next(error);
+  }
+};
+
+export const getAIRecommendation = async (req, res, next) => {
+  try {
+    const userId = req.user.id || req.user._id;
+    const { crop, state, language } = req.query;
+    
+    if (!crop || !state) {
+      return res.status(400).json({ success: false, message: "crop and state are required" });
+    }
+
+    const result = await generateSellRecommendation(userId, crop, state, language);
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getSystemStatus = async (req, res, next) => {
+  try {
+    const result = await mandiService.getSystemStatus();
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
   }
 };

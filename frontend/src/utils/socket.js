@@ -1,22 +1,38 @@
 import { io } from "socket.io-client";
 
-const SOCKET_URL = `http://${window.location.hostname}:5000`; // Dynamic for mobile dev
+// In development, prioritize localhost:5000 if not on production
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || `http://${window.location.hostname}:5000`;
 let socket;
 
 export const initiateSocketConnection = (userId) => {
+    if (socket && socket.connected) return socket;
+
     socket = io(SOCKET_URL, {
-        transports: ["websocket"],
+        transports: ["websocket", "polling"], // Fallback to polling for better reliability
+        withCredentials: true
     });
 
-    if (userId) {
-        socket.emit("joinUserRoom", userId);
-    }
+    // console.log("🔌 Connecting to socket...");
+
+    socket.on("connect", () => {
+        // console.log("✅ Socket connected:", socket.id);
+        if (userId) {
+            socket.emit("joinUserRoom", userId);
+        }
+    });
+
+    socket.on("connect_error", (err) => {
+        console.error("❌ Socket connection error:", err.message);
+    });
 
     return socket;
 };
 
 export const disconnectSocket = () => {
-    if (socket) socket.disconnect();
+    if (socket) {
+        socket.disconnect();
+        socket = null;
+    }
 };
 
 export const getSocket = () => socket;

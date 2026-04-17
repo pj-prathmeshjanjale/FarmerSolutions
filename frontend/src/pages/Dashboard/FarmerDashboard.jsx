@@ -64,7 +64,7 @@ export default function FarmerDashboard() {
       <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
         {/* 1. Weather */}
-        <div onClick={() => setShowWeatherModal(true)} className={cardStyle}>
+        <div onClick={() => navigate("/weather")} className={cardStyle}>
           <div className="text-3xl">🌤</div>
           <h3 className="mt-4 text-lg font-semibold text-slate-900">
             Weather
@@ -142,7 +142,7 @@ export default function FarmerDashboard() {
         </div>
 
         {/* 7. Mandi Prices */}
-        <div onClick={() => setShowMandiModal(true)} className={cardStyle}>
+        <div onClick={() => navigate("/mandi")} className={cardStyle}>
           <div className="text-3xl">💰</div>
           <h3 className="mt-4 text-lg font-semibold text-slate-900">
             Mandi Prices

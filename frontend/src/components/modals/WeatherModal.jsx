@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { getCurrentWeather } from "../../api/weatherApi";
+import { getWeatherDashboard } from "../../api/weatherApi";
 
 export default function WeatherModal({ isOpen, onClose }) {
   const [city, setCity] = useState("");

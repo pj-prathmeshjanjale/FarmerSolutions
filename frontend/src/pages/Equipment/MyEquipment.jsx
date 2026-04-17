@@ -74,7 +74,7 @@ export default function MyEquipment() {
                 </p>
 
                 <p className="mt-2 text-sm font-medium text-emerald-600">
-                  ₹{item.pricePerDay} / day
+                  ₹{item.price || item.pricePerDay} / {item.priceUnit || 'day'}
                 </p>
 
                 <p

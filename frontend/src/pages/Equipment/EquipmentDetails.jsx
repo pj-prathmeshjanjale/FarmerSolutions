@@ -55,7 +55,12 @@ export default function EquipmentDetails() {
           </p>
 
           <div className="mt-6 space-y-2 text-sm">
-            <p>💰 <b>₹{equipment.pricePerDay}/day</b></p>
+            <p>💰 <b>₹{equipment.price || equipment.pricePerDay} / {equipment.priceUnit || 'day'}</b></p>
+            {equipment.priceNote && (
+              <p className="text-xs text-slate-500 italic bg-slate-50 p-2 rounded-lg border-l-4 border-slate-300">
+                📝 {equipment.priceNote}
+              </p>
+            )}
             <p>🚚 Shipping: ₹{equipment.shippingCharge}</p>
             <p>🤝 Negotiable: {equipment.negotiable ? "Yes" : "No"}</p>
             <p>👤 Owner: {equipment.owner?.name}</p>

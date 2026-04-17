@@ -29,20 +29,34 @@ export default function ChatModal({ isOpen, onClose, rentalRequestId }) {
 
 
     // Socket Join Room & Listeners
-    const socket = getSocket();
-    if (socket) {
-      socket.emit("joinRoom", rentalRequestId);
-      socket.on("newMessage", (msg) => {
-        // Prevent duplicates if API also returns it (though API here is only for history)
-        setMessages((prev) => {
-          if (prev.find(m => m._id === msg._id)) return prev;
-          return [...prev, msg];
+    let socket = getSocket();
+
+    const setupSocket = () => {
+      if (socket && socket.connected) {
+        socket.emit("joinRoom", String(rentalRequestId));
+        
+        socket.on("newMessage", (msg) => {
+          setMessages((prev) => {
+            if (prev.find(m => m._id === msg._id)) return prev;
+            return [...prev, msg];
+          });
         });
-      });
+      }
+    };
+
+    if (socket) {
+      if (socket.connected) {
+        setupSocket();
+      } else {
+        socket.on("connect", setupSocket);
+      }
     }
 
     return () => {
-      if (socket) socket.off("newMessage");
+      if (socket) {
+        socket.off("newMessage");
+        socket.off("connect", setupSocket);
+      }
     };
   }, [isOpen, rentalRequestId]);
 

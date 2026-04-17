@@ -3,7 +3,7 @@ import http from "http";
 import app from "./app.js";
 import { Server } from "socket.io";
 import connectDB from "./config/db.js";
-
+import { initMandiCron } from "./jobs/mandiCron.js";
 const PORT = process.env.PORT || 5000;
 
 // Wrap startup in async function
@@ -11,6 +11,9 @@ const startServer = async () => {
   try {
     // Connect MongoDB FIRST
     await connectDB();
+
+    // Init background cron jobs
+    initMandiCron();
 
     // Create HTTP server
     const server = http.createServer(app);
@@ -28,7 +31,9 @@ const startServer = async () => {
       // console.log("🟢 User connected:", socket.id);
 
       socket.on("joinRoom", (rentalRequestId) => {
-        socket.join(rentalRequestId);
+        const roomId = String(rentalRequestId);
+        socket.join(roomId);
+        // console.log(`🏠 Socket ${socket.id} joined room: ${roomId}`);
       });
 
       socket.on("joinUserRoom", (userId) => {

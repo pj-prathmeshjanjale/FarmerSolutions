@@ -10,7 +10,9 @@ export default function AddEquipment() {
     name: "",
     category: "tractor",
     description: "",
-    pricePerDay: "",
+    price: "",
+    priceUnit: "day",
+    priceNote: "",
     shippingCharge: "",
     location: "",
     negotiable: true
@@ -29,7 +31,7 @@ export default function AddEquipment() {
   };
 
   const submitEquipment = async () => {
-    if (!form.name || !form.pricePerDay || !form.location) {
+    if (!form.name || !form.price || !form.location) {
       setError("Please fill all required fields");
       return;
     }
@@ -43,7 +45,9 @@ export default function AddEquipment() {
       formData.append("name", form.name);
       formData.append("category", form.category);
       formData.append("description", form.description);
-      formData.append("pricePerDay", form.pricePerDay);
+      formData.append("price", form.price);
+      formData.append("priceUnit", form.priceUnit);
+      formData.append("priceNote", form.priceNote);
       formData.append("shippingCharge", form.shippingCharge || 0);
       formData.append("location", form.location);
       formData.append("negotiable", form.negotiable);
@@ -105,10 +109,33 @@ export default function AddEquipment() {
           onChange={handleChange}
         />
 
-        <input
-          name="pricePerDay"
-          type="number"
-          placeholder="Price per day (₹)"
+        <div className="flex gap-2">
+          <div className="flex-1">
+            <input
+              name="price"
+              type="number"
+              placeholder="Price (₹)"
+              className="w-full rounded-lg border px-3 py-2"
+              onChange={handleChange}
+            />
+          </div>
+          <div className="w-1/3">
+            <select
+              name="priceUnit"
+              className="w-full rounded-lg border px-3 py-2"
+              onChange={handleChange}
+            >
+              <option value="hour">Per Hour</option>
+              <option value="day">Per Day</option>
+              <option value="acre">Per Acre</option>
+            </select>
+          </div>
+        </div>
+
+        <textarea
+          name="priceNote"
+          placeholder="Pricing notes (e.g. Fuel included, varies by region)"
+          rows="2"
           className="w-full rounded-lg border px-3 py-2"
           onChange={handleChange}
         />

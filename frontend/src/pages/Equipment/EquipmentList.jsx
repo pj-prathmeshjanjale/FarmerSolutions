@@ -90,7 +90,7 @@ export default function EquipmentList() {
 
               <div className="mt-4 flex items-center justify-between">
                 <span className="font-medium text-emerald-600">
-                  ₹{eq.pricePerDay}/day
+                  ₹{eq.price || eq.pricePerDay} / {eq.priceUnit || 'day'}
                 </span>
 
                 <button

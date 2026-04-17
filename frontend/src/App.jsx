@@ -11,6 +11,8 @@ import EquipmentList from "./pages/Equipment/EquipmentList";
 import EquipmentDetails from "./pages/Equipment/EquipmentDetails";
 import AddEquipment from "./pages/Equipment/AddEquipment";
 import MyEquipment from "./pages/Equipment/MyEquipment";
+import MandiMarket from "./pages/Mandi/MandiMarket";
+import WeatherIntelligence from "./pages/Weather/WeatherHub";
 
 import OwnerRequests from "./pages/Rental/OwnerRequests";
 import MyRequests from "./pages/Rental/MyRequests";
@@ -153,6 +155,18 @@ export default function App() {
                 path="/seller/orders"
                 element={
                   isLoggedIn() ? <SellerOrders /> : <Navigate to="/login" />
+                }
+              />
+              <Route
+                path="/mandi"
+                element={
+                  isLoggedIn() ? <MandiMarket /> : <Navigate to="/login" />
+                }
+              />
+              <Route
+                path="/weather"
+                element={
+                  isLoggedIn() ? <WeatherIntelligence /> : <Navigate to="/login" />
                 }
               />
 

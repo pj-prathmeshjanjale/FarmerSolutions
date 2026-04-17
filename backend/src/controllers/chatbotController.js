@@ -1,4 +1,4 @@
-import { callGroqAI } from "../services/groqService.js";
+import { generateContextualResponse } from "../services/aiService.js";
 
 // ===============================
 // Rule-based knowledge base
@@ -96,17 +96,15 @@ export const askChatbot = async (req, res) => {
       });
     }
 
-    // 2️⃣ Fallback to Grok AI
-    const groqResponse = await callGroqAI({
-      question: message
-    });
+    // 2️⃣ Fallback to Structured Context Engine
+    const userId = req.user.id;
+    const aiResponse = await generateContextualResponse(userId, message, lang);
 
     return res.status(200).json({
       success: true,
-      reply: groqResponse.answer,
-      source: "groq-ai"
+      reply: aiResponse.answer,
+      source: "ai-context-engine"
     });
-
 
   } catch (error) {
     console.error("Chatbot Error:", error.message);

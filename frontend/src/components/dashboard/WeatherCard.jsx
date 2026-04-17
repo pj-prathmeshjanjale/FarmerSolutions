@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getCurrentWeather } from "../../api/weatherApi";
+import { getWeatherDashboard } from "../../api/weatherApi";
 
 const CITIES = [
   { label: "Pune", value: "Pune" },
@@ -20,8 +20,14 @@ export default function WeatherCard() {
   const fetchWeather = async (selectedCity) => {
     try {
       setLoading(true);
-      const res = await getCurrentWeather(selectedCity);
-      setWeather(res.data);
+      const res = await getWeatherDashboard(selectedCity);
+      // Accessing the new nested data structure
+      setWeather({
+        location: res.data.data.location,
+        temperature: res.data.data.current.temperature,
+        humidity: res.data.data.current.humidity,
+        weather: res.data.data.current.condition
+      });
     } catch (error) {
       console.error("Weather fetch error:", error);
       setWeather(null);
