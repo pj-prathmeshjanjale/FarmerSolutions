@@ -8,6 +8,8 @@ export default function AdminDashboard() {
 
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [scraperLoading, setScraperLoading] = useState(false);
+    const [scraperMsg, setScraperMsg] = useState("");
 
     // Modal state
     const [selectedItem, setSelectedItem] = useState(null);
@@ -61,12 +63,38 @@ export default function AdminDashboard() {
         setIsModalOpen(true);
     };
 
+    const triggerScraper = async () => {
+        if (!window.confirm("Run Mandi scraper now? This may take 5-10 minutes.")) return;
+        try {
+            setScraperLoading(true);
+            setScraperMsg("");
+            const res = await api.post("/mandi-prices/trigger-scraper");
+            setScraperMsg(res.data.message || "Scraper started!");
+        } catch (err) {
+            setScraperMsg(err.response?.data?.message || "Failed to trigger scraper.");
+        } finally {
+            setScraperLoading(false);
+        }
+    };
+
     return (
         <div className="max-w-6xl mx-auto px-6 py-10">
-            <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-2">
-                Admin Dashboard
-            </h1>
-            <p className="text-slate-600 mt-2">Manage sellers and products across the platform.</p>
+            <div className="flex items-center justify-between flex-wrap gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold text-slate-900">Admin Dashboard</h1>
+                    <p className="text-slate-600 mt-1">Manage sellers and products across the platform.</p>
+                </div>
+                <div className="flex flex-col items-end gap-1">
+                    <button
+                        onClick={triggerScraper}
+                        disabled={scraperLoading}
+                        className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white px-4 py-2 rounded-xl text-sm font-medium transition"
+                    >
+                        {scraperLoading ? "Running Scraper..." : "Refresh Mandi Data"}
+                    </button>
+                    {scraperMsg && <p className="text-xs text-slate-500">{scraperMsg}</p>}
+                </div>
+            </div>
 
             {/* Main Tabs (Sellers vs Products) */}
             <div className="flex gap-6 mt-8 border-b border-slate-200">

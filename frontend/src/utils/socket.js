@@ -1,7 +1,12 @@
 import { io } from "socket.io-client";
 
-// In development, prioritize localhost:5000 if not on production
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || `http://${window.location.hostname}:5000`;
+// Derive socket URL from the same base as the API to avoid localhost fallback in production
+const SOCKET_URL =
+  import.meta.env.VITE_SOCKET_URL ||
+  (import.meta.env.VITE_API_URL
+    ? import.meta.env.VITE_API_URL.replace("/api", "")
+    : `http://${window.location.hostname}:5000`);
+
 let socket;
 
 export const initiateSocketConnection = (userId) => {

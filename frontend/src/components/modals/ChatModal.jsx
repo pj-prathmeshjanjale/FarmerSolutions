@@ -15,7 +15,7 @@ export default function ChatModal({ isOpen, onClose, rentalRequestId }) {
     JSON.parse(localStorage.getItem("user"))?.id ||
     JSON.parse(localStorage.getItem("user"))?._id;
 
-  // Fetch chat history
+  // Fetch history + join socket room
   useEffect(() => {
     if (!isOpen || !rentalRequestId) return;
 
@@ -23,40 +23,36 @@ export default function ChatModal({ isOpen, onClose, rentalRequestId }) {
       .get(`/chat/${rentalRequestId}`)
       .then((res) => {
         setMessages(res.data.messages);
-        refreshCount(); // Clear unread count for this user
+        refreshCount();
       })
       .catch((err) => console.error(err));
 
+    const socket = getSocket();
+    if (!socket) return;
 
-    // Socket Join Room & Listeners
-    let socket = getSocket();
-
-    const setupSocket = () => {
-      if (socket && socket.connected) {
-        socket.emit("joinRoom", String(rentalRequestId));
-        
-        socket.on("newMessage", (msg) => {
-          setMessages((prev) => {
-            if (prev.find(m => m._id === msg._id)) return prev;
-            return [...prev, msg];
-          });
-        });
-      }
+    // Named handler so we can remove it precisely
+    const handleNewMessage = (msg) => {
+      setMessages((prev) => {
+        if (prev.find((m) => m._id === msg._id)) return prev;
+        return [...prev, msg];
+      });
     };
 
-    if (socket) {
-      if (socket.connected) {
-        setupSocket();
-      } else {
-        socket.on("connect", setupSocket);
-      }
+    const joinAndListen = () => {
+      socket.emit("joinRoom", String(rentalRequestId));
+      socket.off("newMessage", handleNewMessage); // remove any stale listener first
+      socket.on("newMessage", handleNewMessage);
+    };
+
+    if (socket.connected) {
+      joinAndListen();
+    } else {
+      socket.once("connect", joinAndListen);
     }
 
     return () => {
-      if (socket) {
-        socket.off("newMessage");
-        socket.off("connect", setupSocket);
-      }
+      socket.off("newMessage", handleNewMessage);
+      socket.off("connect", joinAndListen);
     };
   }, [isOpen, rentalRequestId]);
 
@@ -66,22 +62,42 @@ export default function ChatModal({ isOpen, onClose, rentalRequestId }) {
   }, [messages]);
 
   const sendMessage = async () => {
-    if (!text.trim()) return;
+    const trimmed = text.trim();
+    if (!trimmed) return;
+
+    // Optimistic insert — sender sees their own message instantly
+    const tempMsg = {
+      _id: `temp_${Date.now()}`,
+      sender: { _id: userId },
+      message: trimmed,
+      createdAt: new Date().toISOString()
+    };
+    setMessages((prev) => [...prev, tempMsg]);
+    setText("");
 
     try {
       setLoading(true);
-
       const res = await api.post("/chat/send", {
         rentalRequestId,
-        message: text
+        message: trimmed
       });
-
-      // setMessages((prev) => [...prev, res.data.chatMessage]); 👈 REMOVED (Socket handles it)
-      setText("");
+      // Replace temp message with real one from server
+      setMessages((prev) =>
+        prev.map((m) => (m._id === tempMsg._id ? res.data.chatMessage : m))
+      );
     } catch {
-      alert("Message failed");
+      // Remove failed temp message
+      setMessages((prev) => prev.filter((m) => m._id !== tempMsg._id));
+      alert("Message failed to send. Please try again.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
     }
   };
 
@@ -133,7 +149,8 @@ export default function ChatModal({ isOpen, onClose, rentalRequestId }) {
           <input
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="Type a message…"
+            onKeyDown={handleKeyDown}
+            placeholder="Type a message… (Enter to send)"
             className="flex-1 border rounded-lg px-3 py-2 text-sm"
           />
           <button
