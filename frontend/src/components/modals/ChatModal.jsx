@@ -30,8 +30,10 @@ export default function ChatModal({ isOpen, onClose, rentalRequestId }) {
     const socket = getSocket();
     if (!socket) return;
 
-    // Named handler so we can remove it precisely
+    // Named handler — skip own messages (sender sees via optimistic insert, not socket)
     const handleNewMessage = (msg) => {
+      const msgSenderId = typeof msg.sender === "string" ? msg.sender : msg.sender?._id;
+      if (msgSenderId === userId) return; // Already shown via optimistic insert
       setMessages((prev) => {
         if (prev.find((m) => m._id === msg._id)) return prev;
         return [...prev, msg];
