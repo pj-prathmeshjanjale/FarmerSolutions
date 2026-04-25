@@ -1,6 +1,7 @@
 import cron from "node-cron";
 import { runDataGovScraper } from "../scrapers/dataGovScraper.js";
 import { runCheerioScraper } from "../scrapers/cheerioScraper.js";
+import { runSeedScraper } from "../scrapers/seedScraper.js";
 import { cleanMandiData } from "../services/mandiDataCleaner.js";
 import MandiPrice from "../models/MandiPrice.js";
 import ScraperLog from "../models/ScraperLog.js";
@@ -15,15 +16,22 @@ export const runScraperPipeline = async () => {
   try {
     console.log(`\n⏳ [Mandi Cron] Starting daily scrape at ${new Date().toISOString()}`);
 
-    // 1. Primary: data.gov.in official API (no browser required, works on Render)
+    // 1. Primary: data.gov.in official API
     let scrapeResult = await runDataGovScraper();
     logEntry.scraperUsed = "datagov";
 
-    // 2. Fallback to Cheerio if API returns no data
+    // 2. Fallback to Cheerio
     if (!scrapeResult.success || scrapeResult.data.length === 0) {
       console.log(`⚠️ [Mandi Cron] DataGov returned 0 rows. Trying Cheerio fallback...`);
       scrapeResult = await runCheerioScraper();
       logEntry.scraperUsed = "cheerio";
+    }
+
+    // 3. Final fallback: seed with realistic hardcoded prices
+    if (!scrapeResult.success || scrapeResult.data.length === 0) {
+      console.log(`⚠️ [Mandi Cron] Cheerio also failed. Using seed data fallback...`);
+      scrapeResult = runSeedScraper();
+      logEntry.scraperUsed = "seed";
     }
 
     if (!scrapeResult.success || scrapeResult.data.length === 0) {
