@@ -83,9 +83,9 @@ export const runScraperPipeline = async () => {
  * Initialize Mandi Cron Job
  */
 export const initMandiCron = () => {
-  // Run at 06:00 IST (00:30 UTC) every day
-  cron.schedule("30 0 * * *", () => {
+  // Run at 10:30 IST (05:00 UTC) — Agmarknet publishes data between 9-12 AM IST
+  cron.schedule("0 5 * * *", () => {
     runScraperPipeline();
   });
-  console.log("⏰ Mandi Cron Job Initialized (Runs daily at 06:00 IST)");
+  console.log("⏰ Mandi Cron Job Initialized (Runs daily at 10:30 IST)");
 };
