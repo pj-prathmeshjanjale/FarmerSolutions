@@ -67,12 +67,49 @@ export default function AdminDashboard() {
         if (!window.confirm("Run Mandi scraper now? This may take 5-10 minutes.")) return;
         try {
             setScraperLoading(true);
-            setScraperMsg("");
-            const res = await api.post("/mandi-prices/trigger-scraper");
-            setScraperMsg(res.data.message || "Scraper started!");
+            setScraperMsg("Scraper started... checking every 10s");
+
+            await api.post("/mandi-prices/trigger-scraper");
+
+            // Remember when we triggered so we can detect a fresh log entry
+            const triggeredAt = Date.now();
+
+            let attempts = 0;
+            const poll = setInterval(async () => {
+                attempts++;
+                try {
+                    const statusRes = await api.get("/mandi-prices/status");
+                    const { lastUpdated, status, recordsSavedLastRun } = statusRes.data;
+
+                    if (lastUpdated) {
+                        const secondsAgo = (Date.now() - new Date(lastUpdated).getTime()) / 1000;
+                        const updatedAfterTrigger = new Date(lastUpdated).getTime() > triggeredAt - 5000;
+
+                        if (updatedAfterTrigger && secondsAgo < 900) {
+                            clearInterval(poll);
+                            setScraperLoading(false);
+
+                            if (status === "success" || status === "partial") {
+                                setScraperMsg(`Done! ${recordsSavedLastRun} records saved (${status}) — ${new Date(lastUpdated).toLocaleTimeString()}`);
+                            } else {
+                                setScraperMsg(`Scraper finished: ${status}. Try again or check Render logs.`);
+                            }
+                            return;
+                        }
+                    }
+                } catch (_) { /* ignore poll errors */ }
+
+                if (attempts >= 90) {
+                    clearInterval(poll);
+                    setScraperLoading(false);
+                    setScraperMsg("Scraper is taking longer than usual. Check Render logs.");
+                } else {
+                    setScraperMsg(`Running... (${attempts * 10}s elapsed)`);
+                }
+            }, 10000);
+
         } catch (err) {
             setScraperMsg(err.response?.data?.message || "Failed to trigger scraper.");
-        } finally {
             setScraperLoading(false);
         }
     };
