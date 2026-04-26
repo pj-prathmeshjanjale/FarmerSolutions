@@ -24,6 +24,17 @@ const productSchema = new mongoose.Schema(
       type: Number,
       required: true
     },
+    unitValue: {
+      type: Number,
+      required: true,
+      default: 1
+    },
+    unit: {
+      type: String,
+      enum: ["kg", "g", "L", "ml", "packet", "bag", "quintal", "ton", "piece"],
+      required: true,
+      default: "kg"
+    },
     stock: {
       type: Number,
       required: true

@@ -121,7 +121,9 @@ export default function CheckoutModal({ product, isOpen, onClose, onSuccess }) {
                             </div>
                             <div>
                                 <h3 className="font-bold text-slate-900 leading-tight">{product.name}</h3>
-                                <p className="text-xs font-semibold text-slate-500 mt-1 uppercase tracking-wider">{product.brand}</p>
+                                <p className="text-xs font-semibold text-slate-500 mt-1 uppercase tracking-wider">
+                                    {product.brand} • {product.unitValue} {product.unit}
+                                </p>
                             </div>
                         </div>
 

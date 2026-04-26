@@ -198,7 +198,12 @@ export default function SellerDashboard() {
                                                             </div>
                                                         </div>
                                                     </td>
-                                                    <td className="px-6 py-4 font-medium text-slate-700">₹{product.price}</td>
+                                                    <td className="px-6 py-4 font-medium text-slate-700">
+                                                        ₹{product.price}
+                                                        <span className="block text-xs text-slate-500 font-normal">
+                                                            per {product.unitValue} {product.unit}
+                                                        </span>
+                                                    </td>
                                                     <td className="px-6 py-4">
                                                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${product.stock > 10 ? "bg-slate-100 text-slate-600" : "bg-red-50 text-red-600"
                                                             }`}>

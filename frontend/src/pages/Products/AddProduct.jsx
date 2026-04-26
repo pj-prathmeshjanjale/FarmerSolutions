@@ -11,6 +11,8 @@ export default function AddProduct() {
         brand: "",
         category: "seed",
         price: "",
+        unitValue: "1",
+        unit: "kg",
         stock: "",
         suitableCrops: "",
         suitableSoil: ""
@@ -40,6 +42,8 @@ export default function AddProduct() {
             formData.append("brand", form.brand);
             formData.append("category", form.category);
             formData.append("price", form.price);
+            formData.append("unitValue", form.unitValue);
+            formData.append("unit", form.unit);
             formData.append("stock", form.stock);
             formData.append("suitableCrops", form.suitableCrops);
             formData.append("suitableSoil", form.suitableSoil);
@@ -115,7 +119,7 @@ export default function AddProduct() {
                         </select>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                         <div>
                             <label className="block text-sm font-medium text-slate-700 mb-1">Price (₹) *</label>
                             <input
@@ -126,6 +130,35 @@ export default function AddProduct() {
                                 placeholder="0.00"
                                 className="w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-500"
                             />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Unit Size / Amount *</label>
+                            <div className="flex gap-2">
+                                <input
+                                    name="unitValue"
+                                    type="number"
+                                    value={form.unitValue}
+                                    onChange={handleChange}
+                                    placeholder="e.g. 50"
+                                    className="w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-500"
+                                />
+                                <select
+                                    name="unit"
+                                    value={form.unit}
+                                    onChange={handleChange}
+                                    className="w-1/3 rounded-xl border border-slate-200 px-2 py-3 focus:ring-2 focus:ring-emerald-500 bg-white"
+                                >
+                                    <option value="kg">kg</option>
+                                    <option value="g">g</option>
+                                    <option value="L">L</option>
+                                    <option value="ml">ml</option>
+                                    <option value="packet">packet</option>
+                                    <option value="bag">bag</option>
+                                    <option value="quintal">quintal</option>
+                                    <option value="ton">ton</option>
+                                    <option value="piece">piece</option>
+                                </select>
+                            </div>
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-slate-700 mb-1">Stock Quantity *</label>

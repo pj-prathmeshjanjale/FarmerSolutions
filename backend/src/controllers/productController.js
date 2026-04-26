@@ -3,7 +3,7 @@ import Product from "../models/Product.js";
 // Seller adds product
 export const addProduct = async (req, res) => {
   try {
-    const { name, brand, category, price, stock, suitableCrops, suitableSoil } = req.body;
+    const { name, brand, category, price, unitValue, unit, stock, suitableCrops, suitableSoil } = req.body;
 
     let imageUrls = [];
     if (req.files && req.files.length > 0) {
@@ -16,6 +16,8 @@ export const addProduct = async (req, res) => {
       brand,
       category,
       price,
+      unitValue: unitValue || 1,
+      unit: unit || "kg",
       stock,
       suitableCrops,
       suitableSoil,
