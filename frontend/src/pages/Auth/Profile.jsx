@@ -13,7 +13,7 @@ export default function Profile() {
     const [authData, setAuthData] = useState({ name: "", email: "" });
     const [farmerData, setFarmerData] = useState({
         phone: "", village: "", taluka: "", district: "", state: "", pincode: "",
-        soilType: "", irrigationType: "", budgetRange: "", farmingExperience: "", farmSize: "",
+        soilType: "", irrigationType: "", budgetRange: "", farmSize: "",
         waterSource: "", soilPH: "", lastCropSeason: ""
     });
 
@@ -60,7 +60,6 @@ export default function Profile() {
                 // formatting nums
                 const payload = {
                   ...farmerData,
-                  farmingExperience: farmerData.farmingExperience ? Number(farmerData.farmingExperience) : 0,
                   farmSize: farmerData.farmSize ? Number(farmerData.farmSize) : 0,
                   soilPH: farmerData.soilPH ? Number(farmerData.soilPH) : undefined,
                 };
@@ -232,10 +231,7 @@ export default function Profile() {
                                         <label className="block text-sm font-bold text-slate-700 mb-2">Farm Size (Acres)</label>
                                         <input type="number" min="0" name="farmSize" placeholder="10" value={farmerData.farmSize} onChange={handleFarmerChange} readOnly={!isEditing} className={`w-full px-4 py-3 rounded-lg border ${isEditing ? "border-slate-300 focus:border-slate-500 bg-white" : "border-transparent bg-slate-50 text-slate-500"}`} />
                                     </div>
-                                    <div className="col-span-2 sm:col-span-1">
-                                        <label className="block text-sm font-bold text-slate-700 mb-2">Years of Experience</label>
-                                        <input type="number" min="0" name="farmingExperience" placeholder="5" value={farmerData.farmingExperience} onChange={handleFarmerChange} readOnly={!isEditing} className={`w-full px-4 py-3 rounded-lg border ${isEditing ? "border-slate-300 focus:border-slate-500 bg-white" : "border-transparent bg-slate-50 text-slate-500"}`} />
-                                    </div>
+
                                 </div>
                             </div>
                         )}
