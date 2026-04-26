@@ -14,7 +14,8 @@ export default function Profile() {
     const [farmerData, setFarmerData] = useState({
         phone: "", village: "", taluka: "", district: "", state: "", pincode: "",
         soilType: "", irrigationType: "", budgetRange: "", farmSize: "",
-        waterSource: "", soilPH: "", lastCropSeason: ""
+        waterSource: "", soilPH: "", lastCropSeason: "",
+        equipmentAccess: "", farmingMethod: "", primaryChallenge: "", cropCategory: ""
     });
 
     useEffect(() => {
@@ -69,6 +70,10 @@ export default function Profile() {
                 if(!payload.budgetRange) delete payload.budgetRange;
                 if(!payload.waterSource) delete payload.waterSource;
                 if(!payload.lastCropSeason) delete payload.lastCropSeason;
+                if(!payload.equipmentAccess) delete payload.equipmentAccess;
+                if(!payload.farmingMethod) delete payload.farmingMethod;
+                if(!payload.primaryChallenge) delete payload.primaryChallenge;
+                if(!payload.cropCategory) delete payload.cropCategory;
 
                 await api.post("/farmer/profile", payload);
             }
@@ -117,12 +122,20 @@ export default function Profile() {
                         1. Identity Details
                     </button>
                     {user.role === 'farmer' && (
-                        <button 
-                          onClick={() => setStep(2)} 
-                          className={`w-full text-left px-4 py-3 rounded-xl font-bold text-sm transition-all ${step === 2 ? 'bg-slate-900 text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}
-                        >
-                           2. Agricultural Specs
-                        </button>
+                        <>
+                            <button 
+                              onClick={() => setStep(2)} 
+                              className={`w-full text-left px-4 py-3 rounded-xl font-bold text-sm transition-all ${step === 2 ? 'bg-slate-900 text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}
+                            >
+                               2. Agricultural Specs
+                            </button>
+                            <button 
+                              onClick={() => setStep(3)} 
+                              className={`w-full text-left px-4 py-3 rounded-xl font-bold text-sm transition-all ${step === 3 ? 'bg-slate-900 text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}
+                            >
+                               3. Farm Operations
+                            </button>
+                        </>
                     )}
                 </div>
 
@@ -236,10 +249,60 @@ export default function Profile() {
                             </div>
                         )}
 
+                        {/* Step 3: Farm Operations */}
+                        {step === 3 && user.role === 'farmer' && (
+                            <div className="space-y-6 animate-fadeIn">
+                                <h3 className="text-xl font-bold text-slate-900 mb-6">Farm Operations <span className="ml-2 text-xs font-medium px-2 py-1 bg-purple-100 text-purple-700 rounded-full">AI Synchronized</span></h3>
+                                <p className="text-sm text-slate-500 mb-8">This helps the AI recommend realistic solutions tailored to your capabilities and challenges.</p>
+                                
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="col-span-2 sm:col-span-1 border rounded-lg p-1 bg-slate-50">
+                                        <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 px-3 pt-2">Equipment Access</label>
+                                        <select name="equipmentAccess" value={farmerData.equipmentAccess} onChange={handleFarmerChange} disabled={!isEditing} className="w-full bg-transparent p-3 text-sm font-bold text-slate-900 outline-none">
+                                            <option value="">Select Equipment...</option>
+                                            <option value="owned_heavy">Owned Heavy (Tractors, Harvesters)</option>
+                                            <option value="owned_light">Owned Light (Tillers, Pumps)</option>
+                                            <option value="rented">Rented Equipment</option>
+                                            <option value="manual_labor">Manual Labor</option>
+                                        </select>
+                                    </div>
+                                    <div className="col-span-2 sm:col-span-1 border rounded-lg p-1 bg-slate-50">
+                                        <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 px-3 pt-2">Farming Method</label>
+                                        <select name="farmingMethod" value={farmerData.farmingMethod} onChange={handleFarmerChange} disabled={!isEditing} className="w-full bg-transparent p-3 text-sm font-bold text-slate-900 outline-none">
+                                            <option value="">Select Method...</option>
+                                            <option value="organic">Organic Farming</option>
+                                            <option value="conventional">Conventional (Chemical)</option>
+                                            <option value="integrated">Integrated (IPM)</option>
+                                        </select>
+                                    </div>
+                                    <div className="col-span-2 sm:col-span-1 border rounded-lg p-1 bg-slate-50">
+                                        <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 px-3 pt-2">Primary Challenge</label>
+                                        <select name="primaryChallenge" value={farmerData.primaryChallenge} onChange={handleFarmerChange} disabled={!isEditing} className="w-full bg-transparent p-3 text-sm font-bold text-slate-900 outline-none">
+                                            <option value="">Select Challenge...</option>
+                                            <option value="pest_control">Pest & Insect Control</option>
+                                            <option value="disease_management">Crop Disease Management</option>
+                                            <option value="water_scarcity">Water Scarcity</option>
+                                            <option value="yield_optimization">Low Yield / Soil Health</option>
+                                        </select>
+                                    </div>
+                                    <div className="col-span-2 sm:col-span-1 border rounded-lg p-1 bg-slate-50">
+                                        <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 px-3 pt-2">Crop Category</label>
+                                        <select name="cropCategory" value={farmerData.cropCategory} onChange={handleFarmerChange} disabled={!isEditing} className="w-full bg-transparent p-3 text-sm font-bold text-slate-900 outline-none">
+                                            <option value="">Select Category...</option>
+                                            <option value="cash_crops">Cash Crops (Cotton, Sugarcane)</option>
+                                            <option value="cereals">Cereals (Wheat, Rice, Maize)</option>
+                                            <option value="horticulture">Horticulture (Fruits, Veg)</option>
+                                            <option value="pulses">Pulses & Legumes</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Footer Controls */}
                         {isEditing && (
                             <div className="mt-8 pt-6 border-t border-slate-100 flex items-center justify-between">
-                                <div className="text-sm font-bold text-slate-400">Step {step} of {user.role === 'farmer' ? 2 : 1}</div>
+                                <div className="text-sm font-bold text-slate-400">Step {step} of {user.role === 'farmer' ? 3 : 1}</div>
                                 <div className="flex gap-3">
                                     <button type="button" onClick={() => setIsEditing(false)} className="px-5 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50 rounded-lg">
                                         Cancel

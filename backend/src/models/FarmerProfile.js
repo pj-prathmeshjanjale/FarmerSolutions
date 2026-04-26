@@ -71,6 +71,22 @@ const farmerProfileSchema = new mongoose.Schema(
       type: String,
       enum: ["low", "medium", "high"]
     },
+    equipmentAccess: {
+      type: String,
+      enum: ["owned_heavy", "owned_light", "rented", "manual_labor"]
+    },
+    farmingMethod: {
+      type: String,
+      enum: ["organic", "conventional", "integrated"]
+    },
+    primaryChallenge: {
+      type: String,
+      enum: ["pest_control", "water_scarcity", "yield_optimization", "soil_degradation", "disease_management"]
+    },
+    cropCategory: {
+      type: String,
+      enum: ["cash_crops", "cereals", "horticulture", "pulses"]
+    },
 
     // --- NEW: Sub-Document Array for Crop History
     cropHistory: [
