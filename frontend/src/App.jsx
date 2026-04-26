@@ -27,6 +27,7 @@ import { useEffect, useState } from "react";
 import { initiateSocketConnection, disconnectSocket } from "./utils/socket";
 import { useNotifications } from "./context/NotificationContext";
 import Preloader from "./components/common/Preloader";
+import FloatingAIAssistant from "./components/common/FloatingAIAssistant";
 
 export default function App() {
   const user = getUser();
@@ -83,6 +84,7 @@ export default function App() {
       {!loading && (
         <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-100 to-slate-200 animate-fadeIn">
           <Toaster />
+          {isLoggedIn() && user?.role === 'farmer' && <FloatingAIAssistant />}
           <Navbar />
 
           <main className="flex-1">
