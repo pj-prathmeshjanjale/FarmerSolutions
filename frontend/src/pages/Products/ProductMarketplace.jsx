@@ -250,7 +250,12 @@ export default function ProductMarketplace() {
                                             <div className="mt-auto pt-6 flex items-center justify-between">
                                                 <div>
                                                     <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">Price</p>
-                                                    <p className="text-xl font-bold text-slate-900">₹{p.price.toLocaleString()}</p>
+                                                    <p className="text-xl font-bold text-slate-900">
+                                                        ₹{p.price.toLocaleString()}
+                                                        <span className="text-sm font-medium text-slate-500 ml-1">
+                                                            / {p.unitValue} {p.unit}
+                                                        </span>
+                                                    </p>
                                                 </div>
                                                 <button
                                                     onClick={() => setSelectedProduct(p)}
