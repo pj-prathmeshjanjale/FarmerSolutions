@@ -6,6 +6,8 @@ import { cleanMandiData } from "../services/mandiDataCleaner.js";
 import MandiPrice from "../models/MandiPrice.js";
 import ScraperLog from "../models/ScraperLog.js";
 
+const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
+
 /**
  * Main scraper pipeline
  */
@@ -85,12 +87,55 @@ export const runScraperPipeline = async () => {
 };
 
 /**
+ * Check if we need to run the pipeline immediately on startup.
+ * Returns true if DB is empty OR last successful run was > 6 hours ago.
+ */
+const shouldRunOnStartup = async () => {
+  try {
+    const totalRecords = await MandiPrice.estimatedDocumentCount();
+    if (totalRecords === 0) {
+      console.log("📭 [Mandi Cron] DB is empty — triggering immediate scrape.");
+      return true;
+    }
+
+    const lastLog = await ScraperLog.findOne({ status: { $in: ["success", "partial"] } })
+      .sort({ runAt: -1 })
+      .lean();
+
+    if (!lastLog) {
+      console.log("📋 [Mandi Cron] No successful scrape log found — triggering scrape.");
+      return true;
+    }
+
+    const hoursSinceLast = (Date.now() - new Date(lastLog.runAt).getTime()) / SIX_HOURS_MS;
+    if (hoursSinceLast >= 1) {
+      console.log(`🕐 [Mandi Cron] Last scrape was ${(hoursSinceLast * 6).toFixed(1)}h ago — triggering refresh.`);
+      return true;
+    }
+
+    console.log("✅ [Mandi Cron] Recent data found in DB — skipping startup scrape.");
+    return false;
+  } catch (err) {
+    console.error("[Mandi Cron] Error checking startup condition:", err.message);
+    return true; // Run anyway if we can't check
+  }
+};
+
+/**
  * Initialize Mandi Cron Job
  */
-export const initMandiCron = () => {
-  // Run at 10:30 IST (05:00 UTC) — Agmarknet publishes data between 9-12 AM IST
+export const initMandiCron = async () => {
+  // 1. Run immediately on startup if data is stale or DB is empty
+  const needsImmediateRun = await shouldRunOnStartup();
+  if (needsImmediateRun) {
+    // Run asynchronously so it doesn't block server startup
+    setImmediate(() => runScraperPipeline());
+  }
+
+  // 2. Schedule daily at 10:30 IST (05:00 UTC) — Agmarknet publishes data between 9-12 AM IST
   cron.schedule("0 5 * * *", () => {
     runScraperPipeline();
   });
-  console.log("⏰ Mandi Cron Job Initialized (Runs daily at 10:30 IST)");
+
+  console.log("⏰ Mandi Cron Job Initialized (Runs daily at 10:30 IST + on startup if stale)");
 };

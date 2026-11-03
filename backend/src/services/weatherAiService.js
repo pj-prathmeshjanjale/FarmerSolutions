@@ -1,8 +1,7 @@
-import Groq from "groq-sdk";
+import { createGroqChatCompletion } from "../utils/groqClient.js";
 
 export const generateWeatherInsights = async (language, context) => {
   try {
-    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
     
     // Default to English, map to explicit localized requests if hi/mr
     const languageMap = {
@@ -52,8 +51,7 @@ CRITICAL INSTRUCTIONS:
 - Format using Markdown with clear emojis and headers (e.g., 🌤️ Summary, 💧 Irrigation, 🚜 Farm Actions, ⚠️ Risks).
 - Do not output raw JSON data. Be conversational but concise.`;
 
-    const completion = await groq.chat.completions.create({
-      model: "llama-3.1-8b-instant",
+    const completion = await createGroqChatCompletion({
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: `Give me my daily agricultural forecast and action plan.` }

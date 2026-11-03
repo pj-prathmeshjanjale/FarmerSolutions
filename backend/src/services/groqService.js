@@ -1,14 +1,8 @@
-import Groq from "groq-sdk";
+import { createGroqChatCompletion } from "../utils/groqClient.js";
 
 export const callGroqAI = async ({ question }) => {
   try {
-    // ✅ Create client INSIDE function (after env is loaded)
-    const groq = new Groq({
-      apiKey: process.env.GROQ_API_KEY
-    });
-
-    const completion = await groq.chat.completions.create({
-      model: "llama-3.1-8b-instant",
+    const completion = await createGroqChatCompletion({
       messages: [
         {
           role: "system",

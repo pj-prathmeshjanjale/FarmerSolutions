@@ -1,7 +1,7 @@
-import Groq from "groq-sdk";
 import axios from "axios";
 import { getFarmerContext } from "./farmerService.js";
 import MandiPrice from "../models/MandiPrice.js";
+import { createGroqChatCompletion } from "../utils/groqClient.js";
 
 // Fetch weather
 const getLocalWeather = async (location) => {
@@ -39,10 +39,16 @@ const getRecentMandiContext = async () => {
 
 export const generateContextualResponse = async (userId, userMessage, userLanguage) => {
   try {
-    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-
     // 1. Fetch Structural Data
-    const farmerContext = await getFarmerContext(userId);
+    let farmerContext = null;
+    try {
+      if (userId) {
+        farmerContext = await getFarmerContext(userId);
+      }
+    } catch (profileErr) {
+      console.warn("Could not fetch farmer profile context:", profileErr.message);
+    }
+
     let weatherContext = "Unknown";
     let mandiContext = "Unknown";
 
@@ -82,9 +88,8 @@ Do NOT use Romanized/English script for Marathi or Hindi (e.g., do not write "Na
 Use Markdown formatting: **Bold**, bullet points, ### Headers.
 Do not output the JSON context back to the user. Just the final advice.`;
 
-    // 3. Call AI
-    const completion = await groq.chat.completions.create({
-      model: "llama-3.1-8b-instant",
+    // 3. Call AI with fallback support
+    const completion = await createGroqChatCompletion({
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userMessage }

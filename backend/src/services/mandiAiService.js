@@ -1,20 +1,31 @@
-import Groq from "groq-sdk";
 import { getFarmerContext } from "./farmerService.js";
 import { getBestMandi, getTrends } from "./mandiService.js";
+import { createGroqChatCompletion } from "../utils/groqClient.js";
 
 /**
  * Generate AI recommendation for selling crops based on market data
  */
 export const generateSellRecommendation = async (userId, crop, state, language = "en") => {
   try {
-    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-    
-    // 1. Fetch Farmer Context
-    const farmerContext = await getFarmerContext(userId);
+    // 1. Fetch Farmer Context safely
+    let farmerContext = null;
+    try {
+      if (userId) {
+        farmerContext = await getFarmerContext(userId);
+      }
+    } catch (profileErr) {
+      console.warn("Could not fetch farmer profile context for mandi recommendation:", profileErr.message);
+    }
     
     // 2. Fetch Market Context
-    const bestMandiResult = await getBestMandi({ crop, state });
-    const trendsResult = await getTrends({ crop, state, days: 7 });
+    let bestMandiResult = { success: false };
+    let trendsResult = { success: false };
+    try {
+      bestMandiResult = await getBestMandi({ crop, state });
+      trendsResult = await getTrends({ crop, state, days: 7 });
+    } catch (mandiErr) {
+      console.warn("Could not fetch mandi market data:", mandiErr.message);
+    }
     
     const systemContext = {
       userContext: farmerContext || "No profile found",
@@ -58,8 +69,7 @@ CRITICAL INSTRUCTIONS:
 - Keep it professional, empathetic, and data-driven.
 - Do not output raw JSON data.`;
 
-    const completion = await groq.chat.completions.create({
-      model: "llama-3.1-8b-instant",
+    const completion = await createGroqChatCompletion({
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: `Please advise me on selling my ${crop} crop in ${state}.` }

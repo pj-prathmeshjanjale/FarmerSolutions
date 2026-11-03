@@ -12,8 +12,8 @@ const startServer = async () => {
     // Connect MongoDB FIRST
     await connectDB();
 
-    // Init background cron jobs
-    initMandiCron();
+    // Init background cron jobs (async: checks DB for stale data on startup)
+    await initMandiCron();
 
     // Create HTTP server
     const server = http.createServer(app);
