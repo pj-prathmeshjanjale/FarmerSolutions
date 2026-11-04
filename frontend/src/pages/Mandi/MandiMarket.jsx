@@ -321,9 +321,9 @@ export default function MandiMarket() {
                   <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-slate-200"></span> Price Range</div>
                 </div>
               </div>
-              <div className="h-[350px] w-full">
+              <div className="h-[350px] w-full min-w-0" style={{ minWidth: 0, minHeight: 350 }}>
                 {trends.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={300}>
                     <AreaChart data={trends} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <defs>
                         <linearGradient id="colorAvg" x1="0" y1="0" x2="0" y2="1">

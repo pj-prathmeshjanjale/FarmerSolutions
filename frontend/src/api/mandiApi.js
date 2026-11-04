@@ -17,7 +17,7 @@ export const compareMandis = (crop, state, mandis) => {
 };
 
 export const getAIRecommendation = (crop, state, prompt = "", language = "en") => {
-  return api.post("/mandi-prices/ai-recommend", { crop, state, prompt, language });
+  return api.get("/mandi-prices/ai-recommend", { params: { crop, state, prompt, language } });
 };
 
 export const getSystemStatus = () => {
