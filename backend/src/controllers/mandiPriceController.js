@@ -66,13 +66,16 @@ export const compareMandis = async (req, res, next) => {
 export const getAIRecommendation = async (req, res, next) => {
   try {
     const userId = req.user.id || req.user._id;
-    const { crop, state, language } = req.query;
+    const crop = req.body.crop || req.query.crop;
+    const state = req.body.state || req.query.state;
+    const language = req.body.language || req.query.language || "en";
+    const prompt = req.body.prompt || req.query.prompt || req.body.userPrompt || req.query.userPrompt || "";
     
     if (!crop || !state) {
       return res.status(400).json({ success: false, message: "crop and state are required" });
     }
 
-    const result = await generateSellRecommendation(userId, crop, state, language);
+    const result = await generateSellRecommendation(userId, crop, state, language, prompt);
     res.status(200).json(result);
   } catch (error) {
     next(error);

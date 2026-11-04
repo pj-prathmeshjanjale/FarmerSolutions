@@ -30,7 +30,10 @@ import {
   Activity,
   Clock,
   ArrowUpRight,
-  Trash2
+  Trash2,
+  Send,
+  RotateCcw,
+  Globe
 } from "lucide-react";
 
 export default function MandiMarket() {
@@ -45,6 +48,9 @@ export default function MandiMarket() {
   const [trends, setTrends] = useState([]);
   const [bestMandi, setBestMandi] = useState(null);
   const [aiAdvice, setAiAdvice] = useState("");
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [aiLanguage, setAiLanguage] = useState("mr");
+  const [lastAskedPrompt, setLastAskedPrompt] = useState("");
   const [sysStatus, setSysStatus] = useState(null);
   
   const [loading, setLoading] = useState(false);
@@ -89,6 +95,8 @@ export default function MandiMarket() {
       }
       
       setAiAdvice(""); // reset AI advice on new crop
+      setLastAskedPrompt("");
+      setAiPrompt("");
     } catch (err) {
       toast.error("Failed to load market data.");
     } finally {
@@ -96,12 +104,18 @@ export default function MandiMarket() {
     }
   };
 
-  const handleGetAiAdvice = async () => {
+  const handleGetAiAdvice = async (customPrompt = "") => {
     setAiLoading(true);
+    const promptToSend = typeof customPrompt === "string" && customPrompt.trim() !== "" 
+      ? customPrompt.trim() 
+      : aiPrompt.trim();
+
     try {
-      const res = await getAIRecommendation(crop, stateName);
+      const res = await getAIRecommendation(crop, stateName, promptToSend, aiLanguage);
       if (res.data?.success) {
         setAiAdvice(res.data.recommendation);
+        setLastAskedPrompt(promptToSend);
+        setAiPrompt("");
       } else {
         toast.error("AI is unavailable.");
       }
@@ -110,6 +124,12 @@ export default function MandiMarket() {
     } finally {
       setAiLoading(false);
     }
+  };
+
+  const handlePromptSubmit = (e) => {
+    e.preventDefault();
+    if (!aiPrompt.trim()) return;
+    handleGetAiAdvice(aiPrompt);
   };
 
   const handleCommunitySubmit = async (e) => {
@@ -143,6 +163,28 @@ export default function MandiMarket() {
   const prevAvg = trends.length > 1 ? trends[trends.length - 2]?.avgModalPrice : currentAvg;
   const trendDelta = currentAvg - prevAvg;
   const trendPercent = prevAvg ? ((trendDelta / prevAvg) * 100).toFixed(1) : 0;
+
+  const quickPromptsByLang = {
+    mr: [
+      { label: "⚖️ आता विकावे की थांबावे?", prompt: "सध्याच्या बाजारभावानुसार मी माझे पीक आता विकावे की काही काळ थांबावे?" },
+      { label: "📈 पुढील ७ दिवसांचा अंदाज", prompt: "पुढील ७ दिवसांत या पिकाचे भाव कसे राहतील? भाव वाढण्याची शक्यता आहे का?" },
+      { label: "🏛️ सर्वाधिक भाव देणारी मंडी", prompt: "माझ्या राज्यात या पिकाला सर्वात जास्त दर देणारी सर्वोत्तम मंडी कोणती आहे?" },
+      { label: "📦 साठवणूक करावी का?", prompt: "माल साठवून ठेवणे फायदेशीर ठरेल की लगेच विकल्याने धोका कमी होईल?" }
+    ],
+    hi: [
+      { label: "⚖️ अभी बेचें या इंतज़ार करें?", prompt: "मौजूदा बाजार भाव के आधार पर मुझे फसल अभी बेचनी चाहिए या रुकना चाहिए?" },
+      { label: "📈 अगले 7 दिनों का पूर्वानुमान", prompt: "अगले 7 दिनों में इस फसल का भाव कैसा रहेगा? क्या तेजी आएगी?" },
+      { label: "🏛️ सबसे ज्यादा भाव वाली मंडी", prompt: "मेरे राज्य में इस फसल के लिए सबसे अधिक दाम देने वाली मंडी कौन सी है?" },
+      { label: "📦 भंडारण बनाम तत्काल बिक्री", prompt: "क्या फसल का भंडारण करना बेहतर रहेगा या तुरंत बेचना सुरक्षित है?" }
+    ],
+    en: [
+      { label: "⚖️ Sell now or wait?", prompt: "Based on current rates and 7-day trends, should I liquidate now or wait?" },
+      { label: "📈 7-day price forecast", prompt: "What is the 7-day price trend and predictive outlook for this crop?" },
+      { label: "🏛️ Highest paying mandi", prompt: "Which mandi offers the best modal price and highest profitability?" },
+      { label: "📦 Storage vs selling advice", prompt: "Is it worth storing this crop for a few weeks or selling immediately?" }
+    ]
+  };
+  const quickPrompts = quickPromptsByLang[aiLanguage] || quickPromptsByLang.en;
 
   return (
     <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fadeIn min-h-screen">
@@ -344,57 +386,166 @@ export default function MandiMarket() {
           <div className="space-y-8">
             
             {/* AI Concierge Component */}
-            <div className="bg-slate-900 rounded-3xl overflow-hidden shadow-xl shadow-indigo-900/10 flex flex-col h-[500px]">
-              <div className="p-6 bg-gradient-to-r from-indigo-900/40 to-slate-900 border-b border-slate-800 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center border border-indigo-500/20">
-                  <Bot size={24} />
+            <div className="bg-slate-900 rounded-3xl overflow-hidden shadow-xl shadow-indigo-900/10 flex flex-col h-[580px] border border-slate-800">
+              {/* Header */}
+              <div className="p-4 sm:p-5 bg-gradient-to-r from-indigo-950/80 via-slate-900 to-slate-900 border-b border-slate-800 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center border border-indigo-500/20 shadow-inner">
+                    <Bot size={22} />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-bold text-white flex items-center gap-2">
+                      AI Concierge <Sparkles size={14} className="text-indigo-400 animate-pulse" />
+                    </h2>
+                    <p className="text-[11px] text-indigo-200/60 font-medium">Predictive Market Analysis</p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="text-lg font-bold text-white flex items-center gap-2">AI Concierge <Sparkles size={14} className="text-indigo-400" /></h2>
-                  <p className="text-xs text-indigo-200/60 font-medium">Predictive Market Analysis</p>
+
+                <div className="flex items-center gap-2">
+                  {/* Language Selector */}
+                  <div className="flex items-center bg-slate-950/70 border border-slate-800 rounded-xl px-2 py-1">
+                    <Globe size={12} className="text-indigo-400 mr-1.5" />
+                    <select
+                      value={aiLanguage}
+                      onChange={(e) => setAiLanguage(e.target.value)}
+                      className="bg-transparent text-[11px] font-semibold text-slate-300 focus:outline-none cursor-pointer"
+                    >
+                      <option value="mr" className="bg-slate-900 text-white">मराठी</option>
+                      <option value="hi" className="bg-slate-900 text-white">हिंदी</option>
+                      <option value="en" className="bg-slate-900 text-white">English</option>
+                    </select>
+                  </div>
+
+                  {aiAdvice && (
+                    <button
+                      onClick={() => { setAiAdvice(""); setLastAskedPrompt(""); }}
+                      title="Clear analysis"
+                      className="p-1.5 text-slate-400 hover:text-white bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 rounded-xl transition"
+                    >
+                      <RotateCcw size={14} />
+                    </button>
+                  )}
                 </div>
               </div>
               
-              <div className="flex-1 p-6 overflow-y-auto custom-scrollbar relative">
+              {/* Scrollable Conversation / Output Area */}
+              <div className="flex-1 p-4 sm:p-5 overflow-y-auto custom-scrollbar relative flex flex-col justify-between">
                 {!aiAdvice ? (
-                  <div className="h-full flex flex-col items-center justify-center text-center">
-                    <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center text-slate-500 mb-4 ring-4 ring-slate-800/50">
-                      <Activity size={28} />
+                  <div className="h-full flex flex-col items-center justify-center text-center my-auto">
+                    <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 mb-2 shadow-lg shadow-indigo-500/5">
+                      <Sparkles size={22} />
                     </div>
-                    <p className="text-slate-400 text-sm mb-6 leading-relaxed max-w-xs">
-                      Generate a personalized, data-driven report on whether to liquidate your {crop} holdings or hold for better margins.
+                    
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-300 text-[10px] font-bold uppercase tracking-wider mb-2 border border-indigo-500/20">
+                      {crop} • {stateName}
+                    </div>
+
+                    <p className="text-slate-400 text-xs mb-3 leading-relaxed max-w-xs">
+                      Ask custom predictive market questions, or choose a 1-click prompt below for live price forecasts.
                     </p>
+
+                    {/* Quick Prompts Grid */}
+                    <div className="w-full space-y-1.5 mb-3">
+                      <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider text-left pl-1">
+                        Suggested Prompts
+                      </p>
+                      <div className="grid grid-cols-1 gap-1.5">
+                        {quickPrompts.map((qp, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => handleGetAiAdvice(qp.prompt)}
+                            disabled={aiLoading}
+                            className="w-full text-left px-3 py-2 bg-slate-800/60 hover:bg-indigo-950/40 hover:border-indigo-500/40 border border-slate-800 text-slate-300 hover:text-white text-xs rounded-xl transition-all flex items-center justify-between group disabled:opacity-50"
+                          >
+                            <span className="truncate">{qp.label}</span>
+                            <ArrowUpRight size={13} className="text-slate-500 group-hover:text-indigo-400 shrink-0 ml-1 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
                     <button 
-                      onClick={handleGetAiAdvice}
+                      onClick={() => handleGetAiAdvice("")}
                       disabled={aiLoading}
-                      className="w-full sm:w-auto px-8 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all disabled:opacity-50 shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2"
+                      className="w-full py-2.5 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white text-xs font-bold rounded-xl transition-all disabled:opacity-50 shadow-lg shadow-indigo-600/25 flex items-center justify-center gap-2"
                     >
                       {aiLoading ? (
-                         <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> Generating...</>
+                        <><div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> Analyzing Market...</>
                       ) : (
-                        <><Sparkles size={18} /> Generate Report</>
+                        <><Activity size={15} /> Generate Full Market Report</>
                       )}
                     </button>
                   </div>
                 ) : (
-                  <div className="glass-panel-dark p-5 rounded-2xl ai-advice-container animate-fadeIn">
-                    <div className="text-sm leading-relaxed">
+                  <div className="space-y-4 animate-fadeIn">
+                    {/* User Prompt Badge if custom question */}
+                    {lastAskedPrompt && (
+                      <div className="p-3 bg-indigo-950/40 border border-indigo-500/30 rounded-2xl flex items-start gap-2.5 text-xs text-indigo-200">
+                        <MessageSquare size={14} className="text-indigo-400 mt-0.5 shrink-0" />
+                        <div>
+                          <span className="font-semibold text-indigo-300 block text-[10px] uppercase tracking-wider">Your Inquiry:</span>
+                          <span className="text-slate-200">{lastAskedPrompt}</span>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="glass-panel-dark p-4 rounded-2xl ai-advice-container text-xs text-slate-200 leading-relaxed border border-slate-800">
                       <ReactMarkdown>{aiAdvice}</ReactMarkdown>
+                    </div>
+
+                    {/* Follow-up Quick Chips */}
+                    <div className="pt-2">
+                      <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-1.5">
+                        Ask Follow-up
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {quickPrompts.slice(0, 3).map((qp, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => handleGetAiAdvice(qp.prompt)}
+                            disabled={aiLoading}
+                            className="text-[11px] px-2.5 py-1 bg-slate-800/80 hover:bg-indigo-900/50 border border-slate-700 hover:border-indigo-500 text-slate-300 hover:text-white rounded-lg transition-all disabled:opacity-50"
+                          >
+                            {qp.label}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 )}
               </div>
               
-              {aiAdvice && (
-                <div className="p-4 bg-slate-950 border-t border-slate-800">
-                  <button 
-                    onClick={() => setAiAdvice("")} 
-                    className="w-full py-2.5 text-xs font-bold text-slate-400 hover:text-white bg-slate-900 border border-slate-800 hover:bg-slate-800 rounded-xl transition-all"
-                  >
-                    Clear Analysis
-                  </button>
-                </div>
-              )}
+              {/* Prompt Input Form Bar (Always Visible at Bottom) */}
+              <form onSubmit={handlePromptSubmit} className="p-3 bg-slate-950 border-t border-slate-800 flex items-center gap-2">
+                <input 
+                  type="text"
+                  value={aiPrompt}
+                  onChange={(e) => setAiPrompt(e.target.value)}
+                  placeholder={
+                    aiLanguage === "mr" 
+                      ? `${crop} बाजाराबद्दल प्रश्न विचारा (उदा. भाव कधी वाढतील?)...`
+                      : aiLanguage === "hi"
+                        ? `${crop} बाजार के बारे में प्रश्न पूछें (उदा. भाव कब बढ़ेंगे?)...`
+                        : `Ask anything about ${crop} market (e.g. Will rates rise?)...`
+                  }
+                  className="flex-1 bg-slate-900 border border-slate-800 focus:border-indigo-500 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none transition-colors"
+                  disabled={aiLoading}
+                />
+                <button 
+                  type="submit" 
+                  disabled={aiLoading || !aiPrompt.trim()}
+                  className="px-3.5 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:hover:bg-indigo-600 text-white font-medium text-xs rounded-xl transition-all shadow-md shadow-indigo-600/20 flex items-center justify-center gap-1.5 shrink-0"
+                >
+                  {aiLoading ? (
+                    <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  ) : (
+                    <>
+                      <Send size={13} />
+                      <span className="hidden sm:inline">Ask</span>
+                    </>
+                  )}
+                </button>
+              </form>
             </div>
 
             {/* Community Feed */}

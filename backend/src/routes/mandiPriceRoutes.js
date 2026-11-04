@@ -22,6 +22,7 @@ router.get("/status", getSystemStatus);
 
 // Protected endpoints (require user context)
 router.get("/ai-recommend", protect, getAIRecommendation);
+router.post("/ai-recommend", protect, getAIRecommendation);
 
 // Admin-only: manually trigger the scraper pipeline
 router.post("/trigger-scraper", protect, isAdmin, async (req, res) => {

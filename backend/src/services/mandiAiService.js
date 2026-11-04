@@ -5,7 +5,7 @@ import { createGroqChatCompletion } from "../utils/groqClient.js";
 /**
  * Generate AI recommendation for selling crops based on market data
  */
-export const generateSellRecommendation = async (userId, crop, state, language = "en") => {
+export const generateSellRecommendation = async (userId, crop, state, language = "en", userPrompt = "") => {
   try {
     // 1. Fetch Farmer Context safely
     let farmerContext = null;
@@ -44,35 +44,50 @@ export const generateSellRecommendation = async (userId, crop, state, language =
     };
     const targetLang = languageMap[language] || "English";
 
-    const systemPrompt = `SYSTEM:
-You are an expert agricultural market advisor for Indian farmers. 
-
-CONTEXT (JSON):
-${JSON.stringify(systemContext, null, 2)}
-
-TASK:
+    const promptInstructions = userPrompt && userPrompt.trim() !== ""
+      ? `TASK:
+Answer the farmer's specific inquiry: "${userPrompt.trim()}"
+Use the live market trends, best mandi rates, and farmer profile provided above to deliver an actionable, predictive response.
+Provide:
+1. Direct answer with clear prediction or strategic recommendation (e.g. SELL NOW, WAIT, or PARTIAL SELL if relevant).
+2. Rate comparisons or market highlights.
+3. Realistic risk vs reward analysis.
+4. Actionable advice for maximizing profit.`
+      : `TASK:
 Based on the market trends and best mandi data provided, suggest to the farmer:
 1. A clear recommendation: SELL NOW, WAIT, or PARTIAL SELL.
 2. The best nearby Mandi and its current price.
 3. A detailed but simple reasoning.
-4. Expert tip for better profits.
+4. Expert tip for better profits.`;
+
+    const systemPrompt = `SYSTEM:
+You are an expert AI Concierge and agricultural market advisor for Indian farmers. 
+
+CONTEXT (JSON):
+${JSON.stringify(systemContext, null, 2)}
+
+${promptInstructions}
 
 CRITICAL INSTRUCTIONS:
 - You MUST reply entirely and ONLY in ${targetLang}. 
 - Use actual native script characters for Hindi/Marathi.
 - Format using Markdown with clear headers like:
-    ### 📢 Recommendation
-    ### 📍 Optimal Market
-    ### 💡 Market Analysis
+    ### 📢 Recommendation / Analysis
+    ### 📍 Optimal Market / Rates
+    ### 💡 Market Outlook
     ### 🚀 Pro Tip
 - Use bullet points for easy reading.
 - Keep it professional, empathetic, and data-driven.
 - Do not output raw JSON data.`;
 
+    const userMessageContent = userPrompt && userPrompt.trim() !== ""
+      ? userPrompt.trim()
+      : `Please advise me on selling my ${crop} crop in ${state}.`;
+
     const completion = await createGroqChatCompletion({
       messages: [
         { role: "system", content: systemPrompt },
-        { role: "user", content: `Please advise me on selling my ${crop} crop in ${state}.` }
+        { role: "user", content: userMessageContent }
       ],
       temperature: 0.3
     });
